@@ -1,4 +1,4 @@
-public class ShoppingCart {
+public class sample {
 
   public double calculateTotal(double[] prices) {
     double sum = 0;

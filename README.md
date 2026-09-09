@@ -84,6 +84,19 @@ Integration tests (launch a real VSCode instance via `@vscode/test-electron`):
 npm run test:integration
 ```
 
+## Manual verification — AI integration (Phase 3)
+
+The debug command exercises `lmClient` against live Copilot before the real UI is wired up.
+
+1. Make sure GitHub Copilot is installed and you are signed in.
+2. Press `F5` to open the Extension Development Host. **If the window was open before the latest changes, close it fully and press F5 again** so the extension manifest is reloaded.
+3. Open `test/fixtures/sample.ts` and select the word `calculateTotal`.
+4. Run **Lazy Naming: Debug LM (dev only)** — either right-click the selection and pick it from the context menu, or run it from the Command Palette.
+5. Optionally enter up to 200 characters of context and press Enter.
+6. Open the **Lazy Naming** output channel (View → Output).
+
+Expected: a list of at least 3 name suggestions and a JSDoc block for `calculateTotal`. If Copilot is missing, an error dialog explains that GitHub Copilot is required. This command is dev-only and will be removed before release.
+
 ## Project Docs
 
 - `docs/project_description.md` — product overview
