@@ -157,6 +157,35 @@ Escape at any Quick Pick aborts the remaining symbols; already-applied renames s
 
 Escape at any step aborts the remaining symbols; already-inserted docstrings stay.
 
+## Configuration
+
+Optionally put a `.vscode/lazy-naming.json` file in your workspace root to tune the AI:
+
+```json
+{
+  "namingStyle": {
+    "class": "PascalCase",
+    "method": "camelCase",
+    "variable": "snake_case"
+  },
+  "commentLanguage": "vi",
+  "prefixRules": {
+    "boolean": ["is", "has"],
+    "handler": ["on"]
+  },
+  "customRules": "Use DDD terms such as Order and Customer."
+}
+```
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `namingStyle` | `{ class, method, variable } → camelCase` | Per-kind naming styles, one per key. A plain string (`"snake_case"`) applies to all kinds. Passed in the rename prompt, and suggestions that clearly violate the symbol's style are filtered out. |
+| `commentLanguage` | `en` | The language generated docstrings are written in (e.g. `en`, `vi`). |
+| `prefixRules` | `{}` | Role-based prefix rules for generated names. Keys are roles (`boolean`, `handler`, …); the AI infers the symbol's role from context and picks the matching prefix. |
+| `customRules` | `""` | Free-text project conventions included in both prompts. |
+
+**Language support note:** whole-file symbol detection and symbol-level rename need a language service. Built-in coverage exists for TypeScript/JavaScript, CSS, HTML, JSON, and Markdown. For other languages (Python, Java, Go, …) install the matching extension (e.g. `ms-python.python`) — Lazy Naming will warn you when one is missing.
+
 ## Project Docs
 
 - `docs/project_description.md` — product overview

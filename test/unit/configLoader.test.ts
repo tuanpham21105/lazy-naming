@@ -57,17 +57,34 @@ describe('configLoader', () => {
     it('merges it with defaults so all fields are always defined', async () => {
       writeConfig(workspaceRoot, JSON.stringify({ namingStyle: 'snake_case' }));
       const config = await loadConfig(workspaceRoot);
-      assert.strictEqual(config.namingStyle, 'snake_case');
+      assert.deepStrictEqual(config.namingStyle, {
+        class: 'snake_case',
+        method: 'snake_case',
+        variable: 'snake_case',
+      });
       assert.strictEqual(config.commentLanguage, 'en');
       assert.deepStrictEqual(config.prefixRules, {});
       assert.strictEqual(config.customRules, '');
+    });
+
+    it('accepts a per-kind naming style object and fills missing kinds with the default', async () => {
+      writeConfig(
+        workspaceRoot,
+        JSON.stringify({ namingStyle: { class: 'PascalCase', method: 'snake_case' } }),
+      );
+      const config = await loadConfig(workspaceRoot);
+      assert.deepStrictEqual(config.namingStyle, {
+        class: 'PascalCase',
+        method: 'snake_case',
+        variable: 'camelCase',
+      });
     });
 
     it('preserves every provided field', async () => {
       writeConfig(
         workspaceRoot,
         JSON.stringify({
-          namingStyle: 'PascalCase',
+          namingStyle: { class: 'PascalCase', variable: 'camelCase' },
           commentLanguage: 'vi',
           prefixRules: { boolean: ['is', 'has'], handler: ['on'] },
           customRules: 'Use DDD conventions.',
@@ -75,7 +92,7 @@ describe('configLoader', () => {
       );
       const config = await loadConfig(workspaceRoot);
       assert.deepStrictEqual(config, {
-        namingStyle: 'PascalCase',
+        namingStyle: { class: 'PascalCase', method: 'camelCase', variable: 'camelCase' },
         commentLanguage: 'vi',
         prefixRules: { boolean: ['is', 'has'], handler: ['on'] },
         customRules: 'Use DDD conventions.',
@@ -90,7 +107,7 @@ describe('configLoader', () => {
         JSON.stringify({ unknownField: 123, namingStyle: 'snake_case' }),
       );
       const config = await loadConfig(workspaceRoot);
-      assert.strictEqual(config.namingStyle, 'snake_case');
+      assert.strictEqual(config.namingStyle.method, 'snake_case');
       assert.strictEqual(config.commentLanguage, 'en');
     });
   });
@@ -116,12 +133,44 @@ describe('configLoader', () => {
   });
 
   describe('invalid field values', () => {
-    it('falls back to the default naming style when invalid', async () => {
+    it('falls back to per-kind defaults when the naming style is not a string or object', async () => {
       warnings = withConsoleWarnSpy();
       writeConfig(workspaceRoot, JSON.stringify({ namingStyle: 'kebab-case' }));
       const config = await loadConfig(workspaceRoot);
-      assert.strictEqual(config.namingStyle, 'camelCase');
+      assert.deepStrictEqual(config.namingStyle, {
+        class: 'camelCase',
+        method: 'camelCase',
+        variable: 'camelCase',
+      });
       assert.strictEqual(warnings.length, 1);
+    });
+
+    it('falls back to the default for an invalid per-kind entry and keeps valid kinds', async () => {
+      warnings = withConsoleWarnSpy();
+      writeConfig(
+        workspaceRoot,
+        JSON.stringify({ namingStyle: { class: 'PascalCase', method: 'kebab-case' } }),
+      );
+      const config = await loadConfig(workspaceRoot);
+      assert.deepStrictEqual(config.namingStyle, {
+        class: 'PascalCase',
+        method: 'camelCase',
+        variable: 'camelCase',
+      });
+      assert.strictEqual(warnings.length, 1);
+    });
+
+    it('ignores unknown per-kind keys without warning', async () => {
+      writeConfig(
+        workspaceRoot,
+        JSON.stringify({ namingStyle: { function: 'snake_case' } }),
+      );
+      const config = await loadConfig(workspaceRoot);
+      assert.deepStrictEqual(config.namingStyle, {
+        class: 'camelCase',
+        method: 'camelCase',
+        variable: 'camelCase',
+      });
     });
 
     it('falls back to the default comment language when invalid', async () => {
@@ -155,9 +204,9 @@ describe('configLoader', () => {
   describe('returned object isolation', () => {
     it('does not share mutable state with the defaults', async () => {
       const config = await loadConfig(workspaceRoot);
-      config.namingStyle = 'snake_case';
+      config.namingStyle.class = 'snake_case';
       config.prefixRules.extra = ['x'];
-      assert.strictEqual(DEFAULT_CONFIG.namingStyle, 'camelCase');
+      assert.strictEqual(DEFAULT_CONFIG.namingStyle.class, 'camelCase');
       assert.ok(!('extra' in DEFAULT_CONFIG.prefixRules));
 
       const second = await loadConfig(workspaceRoot);
@@ -167,7 +216,11 @@ describe('configLoader', () => {
 
   it('loads a fully-specified config unchanged', async () => {
     const expected: LazyNamingConfig = {
-      namingStyle: 'snake_case',
+      namingStyle: {
+        class: 'PascalCase',
+        method: 'snake_case',
+        variable: 'camelCase',
+      },
       commentLanguage: 'vi',
       prefixRules: { boolean: ['is', 'has', 'can'], handler: ['on', 'handle'] },
       customRules: 'This project follows DDD conventions.',
@@ -175,5 +228,15 @@ describe('configLoader', () => {
     writeConfig(workspaceRoot, JSON.stringify(expected));
     const config = await loadConfig(workspaceRoot);
     assert.deepStrictEqual(config, expected);
+  });
+
+  it('accepts a plain string naming style as shorthand for all kinds', async () => {
+    writeConfig(workspaceRoot, JSON.stringify({ namingStyle: 'snake_case' }));
+    const config = await loadConfig(workspaceRoot);
+    assert.deepStrictEqual(config.namingStyle, {
+      class: 'snake_case',
+      method: 'snake_case',
+      variable: 'snake_case',
+    });
   });
 });

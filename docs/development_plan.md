@@ -273,7 +273,7 @@ Disable the GitHub Copilot extension in VSCode. Trigger either command. Verify t
 
 **Error handling — no selection**
 
-Without selecting any text, open the Command Palette and run `Lazy Naming: Suggest Rename`. Verify that the user sees a clear message indicating that a symbol must be selected first.
+Without selecting any text, open the Command Palette and run `Lazy Naming: Suggest Rename`. The command acts on the **whole file**: a checkbox Quick Pick lists the file's symbols to rename. Selecting a symbol (or .ts/.js file symbols) is required for whole-file mode to find targets; for files in languages without a language service, no symbols are listed and a warning explains that a language extension is required. With no editor open at all, a clear message asks the user to open a file and select a symbol first.
 
 ---
 

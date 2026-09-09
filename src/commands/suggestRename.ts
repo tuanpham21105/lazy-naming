@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { loadConfig } from '../config/configLoader';
 import { getDocumentContext } from '../core/contextReader';
+import { resolveSelectionKind } from '../core/documentSymbols';
 import { requestNameSuggestions } from '../core/lmClient';
 import { applyRename } from '../core/renameApplier';
 import {
@@ -22,7 +23,13 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
   const config = await loadConfig(workspaceRoot);
 
   const targets = selection !== undefined
-    ? [{ name: document.getText(selection).trim(), range: selection }]
+    ? [
+        {
+          name: document.getText(selection).trim(),
+          kind: await resolveSelectionKind(document, selection),
+          range: selection,
+        },
+      ]
     : await pickFileTargets(document, 'rename');
 
   if (targets.length === 0) {
@@ -47,7 +54,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
         });
         index += 1;
 
-        const context = getDocumentContext(document, target.range, target.name);
+        const context = getDocumentContext(document, target.range, target.name, target.kind);
 
         let suggestions: string[];
         try {
@@ -64,7 +71,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
           })),
           {
             title: `Lazy Naming: Pick a new name for "${target.name}"`,
-            placeHolder: 'Press Escape to stop',
+            placeHolder: 'Pick a name to apply',
             canPickMany: false,
             ignoreFocusOut: true,
           },
@@ -81,7 +88,8 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
         );
         if (!applied) {
           vscode.window.showWarningMessage(
-            `Lazy Naming: could not compute a rename for "${target.name}".`,
+            `Lazy Naming: could not compute a rename for "${target.name}". ` +
+              `A language service may be required — installing one for ${document.languageId} may fix this.`,
           );
         }
       }

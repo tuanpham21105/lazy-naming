@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { loadConfig } from '../config/configLoader';
 import { getDocumentContext } from '../core/contextReader';
+import { resolveSelectionKind } from '../core/documentSymbols';
 import { isDocstringText } from '../core/docstringInserter';
 import { requestDocstring } from '../core/lmClient';
 import { applyDocstrings } from '../core/renameApplier';
@@ -23,7 +24,13 @@ export async function generateDescription(uri?: vscode.Uri): Promise<void> {
   const config = await loadConfig(workspaceRoot);
 
   const targets = selection !== undefined
-    ? [{ name: document.getText(selection).trim(), range: selection }]
+    ? [
+        {
+          name: document.getText(selection).trim(),
+          kind: await resolveSelectionKind(document, selection),
+          range: selection,
+        },
+      ]
     : await pickFileTargets(document, 'describe');
 
   if (targets.length === 0) {
@@ -36,6 +43,7 @@ export async function generateDescription(uri?: vscode.Uri): Promise<void> {
   }
 
   const pending: { range: vscode.Range; docstring: string }[] = [];
+  let aborted = false;
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -49,12 +57,13 @@ export async function generateDescription(uri?: vscode.Uri): Promise<void> {
         });
         index += 1;
 
-        const context = getDocumentContext(document, target.range, target.name);
+        const context = getDocumentContext(document, target.range, target.name, target.kind);
 
         let docstring: string;
         try {
           docstring = await requestDocstring(context, config, hint);
         } catch (error) {
+          aborted = true;
           surfaceLmError(error);
           return;
         }
@@ -71,7 +80,7 @@ export async function generateDescription(uri?: vscode.Uri): Promise<void> {
     },
   );
 
-  if (pending.length === 0) {
+  if (aborted || pending.length === 0) {
     return;
   }
 

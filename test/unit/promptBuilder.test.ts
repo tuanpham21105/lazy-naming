@@ -4,13 +4,15 @@ import type { SymbolContext } from '../../src/core/contextReader';
 import {
   buildDescriptionPrompt,
   buildRenamePrompt,
+  filterNamesByStyle,
   getCommentFormat,
   parseDocstring,
   parseNameSuggestions,
+  prefixRulesPrompt,
 } from '../../src/core/promptBuilder';
 
 const config: LazyNamingConfig = {
-  namingStyle: 'snake_case',
+  namingStyle: { class: 'PascalCase', method: 'snake_case', variable: 'camelCase' },
   commentLanguage: 'vi',
   prefixRules: {},
   customRules: 'Use DDD terms such as Order and Customer.',
@@ -19,11 +21,24 @@ const config: LazyNamingConfig = {
 const context: SymbolContext = {
   languageId: 'typescript',
   symbolName: 'doStuff',
+  symbolKind: 'method',
   surroundingCode:
     'export function doStuff(a: number): number {\n  return a + 1;\n}',
   surroundingStartLine: 0,
   surroundingEndLine: 2,
   usageLocations: [{ line: 5 }, { line: 9 }] as unknown as SymbolContext['usageLocations'],
+};
+
+const variableContext: SymbolContext = {
+  ...context,
+  symbolName: 'res',
+  symbolKind: 'variable',
+};
+
+const classContext: SymbolContext = {
+  ...context,
+  symbolName: 'orderModel',
+  symbolKind: 'class',
 };
 
 const pythonContext: SymbolContext = {
@@ -62,6 +77,12 @@ describe('buildRenamePrompt', () => {
     assert.ok(prompt.includes('Order and Customer'));
   });
 
+  it('uses the naming style configured for the symbol kind', () => {
+    assert.ok(buildRenamePrompt(context, config).includes('snake_case'));
+    assert.ok(buildRenamePrompt(variableContext, config).includes('camelCase'));
+    assert.ok(buildRenamePrompt(classContext, config).includes('PascalCase'));
+  });
+
   it('requests a JSON array of candidate names', () => {
     const prompt = buildRenamePrompt(context, config);
     assert.ok(prompt.includes('JSON array'));
@@ -85,6 +106,69 @@ describe('buildRenamePrompt', () => {
   it('includes the reference line numbers of other usages', () => {
     const prompt = buildRenamePrompt(context, config);
     assert.ok(prompt.includes('lines: 6, 10'));
+  });
+
+  it('adds the prefix rules when configured', () => {
+    const withRules = buildRenamePrompt(context, {
+      ...config,
+      prefixRules: { boolean: ['is', 'has'], handler: ['on'] },
+    });
+    assert.ok(withRules.includes('boolean: is, has'));
+    assert.ok(withRules.includes('handler: on'));
+    assert.ok(withRules.includes("Apply the matching prefix rule for the symbol's role"));
+  });
+
+  it('omits the prefix rules section when no rules are configured', () => {
+    const prompt = buildRenamePrompt(context, config);
+    assert.ok(!prompt.includes("Apply the matching prefix rule for the symbol's role"));
+    assert.ok(!prompt.includes('boolean: is, has'));
+  });
+});
+
+describe('prefixRulesPrompt', () => {
+  it('renders one row per role with the matching prefixes', () => {
+    assert.strictEqual(
+      prefixRulesPrompt({ boolean: ['is', 'has', 'can'], handler: ['on'] }),
+      `Apply the matching prefix rule for the symbol's role:\n` +
+        '- boolean: is, has, can\n' +
+        '- handler: on',
+    );
+  });
+
+  it('returns undefined for an empty rule set', () => {
+    assert.strictEqual(prefixRulesPrompt({}), undefined);
+  });
+});
+
+describe('filterNamesByStyle', () => {
+  it('drops uppercase names when snake_case is requested', () => {
+    assert.deepStrictEqual(
+      filterNamesByStyle(['total_price', 'totalPrice', 'TOTAL_PRICE'], 'snake_case'),
+      ['total_price'],
+    );
+  });
+
+  it('drops names with underscores or spaces when camelCase is requested', () => {
+    assert.deepStrictEqual(
+      filterNamesByStyle(['doubleValue', 'double_value', 'double value'], 'camelCase'),
+      ['doubleValue'],
+    );
+  });
+
+  it('drops names with underscores when PascalCase is requested', () => {
+    assert.deepStrictEqual(
+      filterNamesByStyle(['DoubleValue', 'Double_Value'], 'PascalCase'),
+      ['DoubleValue'],
+    );
+  });
+
+  it('keeps single-word names regardless of capitalization between camel and pascal', () => {
+    assert.deepStrictEqual(filterNamesByStyle(['value', 'Value'], 'camelCase'), ['value', 'Value']);
+    assert.deepStrictEqual(filterNamesByStyle(['value', 'Value'], 'PascalCase'), ['value', 'Value']);
+  });
+
+  it('drops empty and whitespace-only entries', () => {
+    assert.deepStrictEqual(filterNamesByStyle(['  ', 'doStuff'], 'camelCase'), ['doStuff']);
   });
 });
 

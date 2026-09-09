@@ -2,11 +2,13 @@ import * as vscode from 'vscode';
 import { getDocumentSymbols } from '../core/documentSymbols';
 import { hasBuiltInSymbolProvider, recommendedSymbolExtension } from '../core/languageSupport';
 import { LmRequestError } from '../core/lmClient';
+import type { SymbolCategory } from '../core/symbolTree';
 
 export const MAX_HINT_LENGTH = 200;
 
 export interface SymbolTarget {
   name: string;
+  kind: SymbolCategory;
   range: vscode.Range;
 }
 
@@ -58,6 +60,7 @@ export async function pickFileTargets(
   const chosen = await vscode.window.showQuickPick(
     symbols.map((symbol, index) => ({
       label: symbol.name,
+      description: symbol.kind,
       index,
       picked: true,
     })),
@@ -74,6 +77,7 @@ export async function pickFileTargets(
 
   return chosen.map((item) => ({
     name: symbols[item.index].name,
+    kind: symbols[item.index].kind,
     range: symbols[item.index].range,
   }));
 }

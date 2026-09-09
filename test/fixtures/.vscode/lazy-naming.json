@@ -1,0 +1,13 @@
+{
+  "namingStyle": {
+    "class": "snake_case",
+    "method": "snake_case",
+    "variable": "camelCase"
+  },
+  "commentLanguage": "vi",
+  "prefixRules": {
+    "boolean": ["is", "has"],
+    "handler": ["on"]
+  },
+  "customRules": "Var name always end with ...Var, method name always end with ..Method."
+}

@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import type { LazyNamingConfig } from '../config/configLoader';
+import { namingStyleFor, type LazyNamingConfig } from '../config/configLoader';
 import type { SymbolContext } from './contextReader';
 import {
   buildDescriptionPrompt,
   buildRenamePrompt,
+  filterNamesByStyle,
   parseDocstring,
   parseNameSuggestions,
 } from './promptBuilder';
@@ -58,12 +59,13 @@ export async function requestNameSuggestions(
 ): Promise<string[]> {
   const model = await selectCopilotModel();
   const raw = await sendRequest(model, buildRenamePrompt(context, config, hint));
-  const suggestions = parseNameSuggestions(raw);
+  const style = namingStyleFor(config.namingStyle, context.symbolKind);
+  const suggestions = filterNamesByStyle(parseNameSuggestions(raw), style);
 
   if (suggestions.length === 0) {
     throw new LmRequestError(
       'MALFORMED_RESPONSE',
-      'Copilot returned an unexpected response. Please try again.',
+      `None of Copilot's suggestions matched the configured naming style (${style}). Please try again.`,
     );
   }
 

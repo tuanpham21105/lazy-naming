@@ -1,5 +1,8 @@
+export type SymbolCategory = 'class' | 'method' | 'variable';
+
 export interface SymbolNode<R> {
   name: string;
+  kind: SymbolCategory;
   range: R;
   children?: SymbolNode<R>[];
 }

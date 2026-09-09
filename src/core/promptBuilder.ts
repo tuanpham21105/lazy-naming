@@ -1,4 +1,4 @@
-import type { LazyNamingConfig } from '../config/configLoader';
+import { namingStyleFor, type LazyNamingConfig, type NamingStyle } from '../config/configLoader';
 import type { SymbolContext } from './contextReader';
 
 const COMMENT_FORMATS: Record<string, string> = {
@@ -20,6 +20,15 @@ function referenceLineNumbers(context: SymbolContext): string {
   return context.usageLocations.map((position) => position.line + 1).join(', ');
 }
 
+export function prefixRulesPrompt(rules: Record<string, string[]>): string | undefined {
+  const entries = Object.entries(rules);
+  if (entries.length === 0) {
+    return undefined;
+  }
+  const rows = entries.map(([role, prefixes]) => `- ${role}: ${prefixes.join(', ')}`);
+  return `Apply the matching prefix rule for the symbol's role:\n${rows.join('\n')}`;
+}
+
 export function buildRenamePrompt(
   context: SymbolContext,
   config: LazyNamingConfig,
@@ -27,11 +36,14 @@ export function buildRenamePrompt(
 ): string {
   const sections: string[] = [];
 
+  const style = namingStyleFor(config.namingStyle, context.symbolKind);
+
   sections.push(
     `You are an expert software engineer. The symbol "${context.symbolName}" in a ${context.languageId} file needs a better name that reflects what it does.`,
   );
   sections.push(`Programming language: ${context.languageId}`);
-  sections.push(`Required naming style: ${config.namingStyle}`);
+  sections.push(`Symbol kind: ${context.symbolKind}`);
+  sections.push(`Required naming style: ${style}`);
   sections.push(
     `Surrounding code:\n\`\`\`${context.languageId}\n${context.surroundingCode}\n\`\`\``,
   );
@@ -44,6 +56,11 @@ export function buildRenamePrompt(
 
   if (config.customRules.trim() !== '') {
     sections.push(`Project-specific rules: ${config.customRules}`);
+  }
+
+  const prefixPrompt = prefixRulesPrompt(config.prefixRules);
+  if (prefixPrompt !== undefined) {
+    sections.push(prefixPrompt);
   }
 
   if (hint !== undefined && hint.trim() !== '') {
@@ -100,6 +117,22 @@ export function parseNameSuggestions(text: string): string[] {
   }
 
   return parseListLines(text);
+}
+
+export function filterNamesByStyle(names: string[], style: NamingStyle): string[] {
+  return names.filter((name) => {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      return false;
+    }
+    if (style === 'snake_case' && /[A-Z]/.test(trimmed)) {
+      return false;
+    }
+    if (style !== 'snake_case' && /[\s_]/.test(trimmed)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export function parseDocstring(text: string): string {

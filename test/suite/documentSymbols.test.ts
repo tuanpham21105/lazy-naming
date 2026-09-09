@@ -4,12 +4,17 @@ import * as vscode from 'vscode';
 
 interface FileSymbolLike {
   name: string;
+  kind: 'class' | 'method' | 'variable';
   range: vscode.Range;
   children?: FileSymbolLike[];
 }
 
 const documentSymbols = require('../../core/documentSymbols') as {
   getDocumentSymbols: (document: vscode.TextDocument) => Promise<FileSymbolLike[]>;
+  resolveSelectionKind: (
+    document: vscode.TextDocument,
+    selection: vscode.Range,
+  ) => Promise<FileSymbolLike['kind']>;
 };
 
 function repoRoot(): string {
@@ -70,6 +75,37 @@ suite('documentSymbols', () => {
     const found = symbols.find((symbol) => symbol.name === 'calculateTotal');
     assert.ok(found !== undefined);
     assert.strictEqual(sampleTs.getText(found!.range), 'calculateTotal');
+  });
+
+  test('reports the kind of each symbol', async () => {
+    const symbols = await documentSymbols.getDocumentSymbols(sampleTs);
+    const byName = Object.fromEntries(symbols.map((symbol) => [symbol.name, symbol.kind]));
+    assert.strictEqual(byName['OrderItem'], 'class');
+    assert.strictEqual(byName['Cart'], 'class');
+    assert.strictEqual(byName['calculateTotal'], 'method');
+    assert.strictEqual(byName['add'], 'method');
+    assert.strictEqual(byName['TAX_RATE'], 'variable');
+  });
+
+  test('resolves the kind of a symbol from a selection inside it', async () => {
+    const symbols = await documentSymbols.getDocumentSymbols(sampleTs);
+    const calculateTotal = symbols.find((symbol) => symbol.name === 'calculateTotal');
+    const cart = symbols.find((symbol) => symbol.name === 'Cart');
+    assert.ok(calculateTotal !== undefined);
+    assert.ok(cart !== undefined);
+    assert.strictEqual(
+      await documentSymbols.resolveSelectionKind(sampleTs, calculateTotal!.range),
+      'method',
+    );
+    assert.strictEqual(
+      await documentSymbols.resolveSelectionKind(sampleTs, cart!.range),
+      'class',
+    );
+  });
+
+  test('falls back to variable for selections outside any known symbol', async () => {
+    const fallback = new vscode.Range(0, 0, 0, 1);
+    assert.strictEqual(await documentSymbols.resolveSelectionKind(sampleTs, fallback), 'variable');
   });
 
   test('returns an array for files without an active language service', async () => {

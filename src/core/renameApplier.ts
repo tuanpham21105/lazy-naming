@@ -109,7 +109,11 @@ function documentLines(document: vscode.TextDocument): string[] {
 }
 
 async function applyEdit(edit: vscode.WorkspaceEdit): Promise<boolean> {
-  return vscode.workspace.applyEdit(edit, {
-    isRefactoring: true,
-  });
+  try {
+    return await vscode.workspace.applyEdit(edit, {
+      isRefactoring: true,
+    });
+  } catch {
+    return false;
+  }
 }

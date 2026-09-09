@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import type { SymbolCategory } from './symbolTree';
 
 export const WINDOW_LINES = 30;
 export const MAX_USAGE_MATCHES = 100;
@@ -16,6 +17,7 @@ export interface ContextOptions {
 export interface SymbolContext {
   languageId: string;
   symbolName: string;
+  symbolKind: SymbolCategory;
   surroundingCode: string;
   surroundingStartLine: number;
   surroundingEndLine: number;
@@ -79,6 +81,7 @@ export function getDocumentContext(
   document: vscode.TextDocument,
   symbolRange: vscode.Range,
   symbolName: string,
+  symbolKind: SymbolCategory = 'variable',
   options: ContextOptions = {},
 ): SymbolContext {
   const windowLines = options.windowLines ?? WINDOW_LINES;
@@ -112,6 +115,7 @@ export function getDocumentContext(
   return {
     languageId: document.languageId,
     symbolName,
+    symbolKind,
     surroundingCode: lines.join('\n'),
     surroundingStartLine: bounds.startLine,
     surroundingEndLine: bounds.endLine,
