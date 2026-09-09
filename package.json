@@ -1,0 +1,82 @@
+{
+  "name": "lazy-naming",
+  "displayName": "Lazy Naming",
+  "description": "AI-assisted naming and documentation for your code",
+  "version": "0.0.1",
+  "publisher": "tuanpham21105",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "naming",
+    "refactor",
+    "rename",
+    "documentation",
+    "copilot"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "lazyNaming.suggestRename",
+        "title": "Lazy Naming: Suggest Rename"
+      },
+      {
+        "command": "lazyNaming.generateDescription",
+        "title": "Lazy Naming: Generate Description"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "lazyNaming.suggestRename",
+          "when": "editorHasSelection",
+          "group": "1_modification"
+        },
+        {
+          "command": "lazyNaming.generateDescription",
+          "when": "editorHasSelection",
+          "group": "1_modification"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "lazyNaming.suggestRename",
+          "when": "!explorerResourceIsFolder",
+          "group": "1_modification"
+        },
+        {
+          "command": "lazyNaming.generateDescription",
+          "when": "!explorerResourceIsFolder",
+          "group": "1_modification"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "compile-tests": "tsc -p ./test",
+    "test": "mocha",
+    "pretest:integration": "npm run compile && npm run compile-tests",
+    "test:integration": "node ./out/test/runTests.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.4.1",
+    "glob": "^10.4.5",
+    "mocha": "^12.0.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}

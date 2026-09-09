@@ -40,3 +40,52 @@ Learn to take initiative, solve practical problems, and build useful workflow to
 
 ## Deadline
 3 days from project start.
+
+---
+
+# Lazy Naming — Extension Development
+
+This repository also contains `lazy-naming`, a VSCode extension that uses AI to suggest meaningful names and generate descriptive docstrings for functions, variables, and classes.
+
+## Prerequisites
+
+- Node.js 20+
+- npm
+- VSCode
+- [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) extension (required at runtime, not for development)
+
+## Setup
+
+```bash
+npm install
+```
+
+## Run in the Extension Development Host
+
+1. Open this repository in VSCode.
+2. Press `F5` (or run the **Run Extension** launch configuration).
+3. In the new window, both commands work at two scopes:
+   - **Selected symbol** — select a function/variable/class, right-click, and both commands appear (the commands are shown when text is selected).
+   - **Whole file** — right-click a file in the Explorer and choose either command, or run them from the Command Palette with no selection (they act on the active document).
+
+Currently both commands show a placeholder message describing the resolved target. Full implementation is planned for later phases.
+
+## Tests
+
+Unit tests (no VSCode host needed, pure logic only):
+
+```bash
+npm test
+```
+
+Integration tests (launch a real VSCode instance via `@vscode/test-electron`):
+
+```bash
+npm run test:integration
+```
+
+## Project Docs
+
+- `docs/project_description.md` — product overview
+- `docs/project_structure.md` — architecture and responsibilities
+- `docs/development_plan.md` — phased development plan and testing guide
