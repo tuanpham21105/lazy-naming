@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { loadConfig } from '../config/configLoader';
 import { getDocumentContext } from '../core/contextReader';
-import { requestNameSuggestions } from '../core/lmClient';
-import { applyRename } from '../core/renameApplier';
+import { isDocstringText } from '../core/docstringInserter';
+import { requestDocstring } from '../core/lmClient';
+import { applyDocstrings } from '../core/renameApplier';
 import {
   pickFileTargets,
   requestOptionalHint,
@@ -10,7 +11,7 @@ import {
   surfaceLmError,
 } from './targets';
 
-export async function suggestRename(uri?: vscode.Uri): Promise<void> {
+export async function generateDescription(uri?: vscode.Uri): Promise<void> {
   const resolved = await resolveTarget(uri);
   if (resolved === undefined) {
     return;
@@ -23,7 +24,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
 
   const targets = selection !== undefined
     ? [{ name: document.getText(selection).trim(), range: selection }]
-    : await pickFileTargets(document, 'rename');
+    : await pickFileTargets(document, 'describe');
 
   if (targets.length === 0) {
     return;
@@ -34,6 +35,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
     return;
   }
 
+  const pending: { range: vscode.Range; docstring: string }[] = [];
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -43,48 +45,40 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
       let index = 1;
       for (const target of targets) {
         progress.report({
-          message: `(${index}/${targets.length}) Suggesting a name for "${target.name}"…`,
+          message: `(${index}/${targets.length}) Writing a docstring for "${target.name}"…`,
         });
         index += 1;
 
         const context = getDocumentContext(document, target.range, target.name);
 
-        let suggestions: string[];
+        let docstring: string;
         try {
-          suggestions = await requestNameSuggestions(context, config, hint);
+          docstring = await requestDocstring(context, config, hint);
         } catch (error) {
           surfaceLmError(error);
           return;
         }
 
-        const chosen = await vscode.window.showQuickPick(
-          suggestions.map((name) => ({
-            label: name,
-            description: `Replace "${target.name}"`,
-          })),
-          {
-            title: `Lazy Naming: Pick a new name for "${target.name}"`,
-            placeHolder: 'Press Escape to stop',
-            canPickMany: false,
-            ignoreFocusOut: true,
-          },
-        );
-        if (chosen === undefined) {
-          return;
+        if (!isDocstringText(docstring, document.languageId)) {
+          vscode.window.showWarningMessage(
+            `Lazy Naming: no valid docstring returned for "${target.name}".`,
+          );
+          continue;
         }
 
-        const applied = await applyRename(
-          document,
-          target.range.start,
-          chosen.label,
-          context.usageLocations,
-        );
-        if (!applied) {
-          vscode.window.showWarningMessage(
-            `Lazy Naming: could not compute a rename for "${target.name}".`,
-          );
-        }
+        pending.push({ range: target.range, docstring });
       }
     },
   );
+
+  if (pending.length === 0) {
+    return;
+  }
+
+  const applied = await applyDocstrings(document, pending);
+  if (!applied) {
+    vscode.window.showWarningMessage(
+      'Lazy Naming: could not insert the generated docstrings.',
+    );
+  }
 }

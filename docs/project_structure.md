@@ -15,11 +15,16 @@ lazy-naming/
 │   ├── extension.ts
 │   ├── commands/
 │   │   ├── suggestRename.ts
-│   │   └── generateDescription.ts
+│   │   ├── generateDescription.ts
+│   │   └── targets.ts
 │   ├── core/
 │   │   ├── lmClient.ts
+│   │   ├── promptBuilder.ts
 │   │   ├── contextReader.ts
-│   │   └── renameApplier.ts
+│   │   ├── documentSymbols.ts
+│   │   ├── symbolTree.ts
+│   │   ├── renameApplier.ts
+│   │   └── docstringInserter.ts
 │   └── config/
 │       └── configLoader.ts
 │
@@ -80,6 +85,14 @@ The docstring follows the standard format for each programming language — JSDo
 
 ---
 
+### `src/commands/targets.ts`
+
+**Shared orchestration helpers for both commands.**
+
+Contains the pieces the two commands have in common: resolving the entry scope (Explorer URI → whole file, active editor selection → symbol, otherwise the whole file), the multi-select symbol picker for file scope, the optional context input box, and uniform error surfacing for `LmRequestError`.
+
+---
+
 ### `src/core/lmClient.ts`
 
 **The bridge between the extension and GitHub Copilot through the VSCode Language Model API.**
@@ -116,9 +129,33 @@ This information is included in the prompt so the AI has enough context to produ
 It handles two different types of changes:
 
 * **Rename:** Uses the VSCode Rename Provider (the same API used by the F2 key) to rename the symbol consistently across the entire workspace, including other files that import or use the symbol.
-* **Generate Description:** Inserts a comment block directly above the symbol in the current file.
+* **Generate Description:** Builds a `WorkspaceEdit` that inserts a comment block directly above the symbol in the current file, using the pure insertion logic from `docstringInserter.ts`.
 
 Both changes are sent to Refactor Preview so the user can review all changes and confirm them before applying.
+
+---
+
+### `src/core/docstringInserter.ts`
+
+**Pure logic for placing a docstring above a symbol declaration.**
+
+It is VSCode-free and unit-testable. It finds an existing docstring block above a declaration line (so it can be replaced instead of duplicated), computes the exact insertion/replacement text, and matches the declaration's indentation. For whole-file runs, `planDocstringEdits` computes a set of non-overlapping insertions against a single document snapshot, so multiple symbols are applied together without overlapping or interleaving.
+
+---
+
+### `src/core/documentSymbols.ts` and `src/core/symbolTree.ts`
+
+**Symbol enumeration for whole-file scope.**
+
+`documentSymbols.ts` asks the active language service for the document's symbols and flattens the tree via the pure `flattenSymbols` helper in `symbolTree.ts`, returning a flat list of `{ name, range }` entries with the indentation and location needed by both commands.
+
+---
+
+### `src/core/promptBuilder.ts`
+
+**Pure prompt construction for `lmClient`.**
+
+Builds the rename and docstring prompts from a `SymbolContext` and `LazyNamingConfig`, maps languages to comment formats (JSDoc / Python docstring / Javadoc), and parses the model's streamed text back into typed results. No VSCode imports, so it is unit-testable.
 
 ---
 

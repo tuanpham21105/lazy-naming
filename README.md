@@ -68,7 +68,7 @@ npm install
    - **Selected symbol** — select a function/variable/class, right-click, and both commands appear (the commands are shown when text is selected).
    - **Whole file** — right-click a file in the Explorer and choose either command, or run them from the Command Palette with no selection (they act on the active document).
 
-- **Suggest Rename** is fully implemented for both scopes. **Generate Description** still shows a placeholder message and is planned for the next phase.
+Both commands are fully implemented for both scopes.
 
 ## Tests
 
@@ -121,6 +121,41 @@ Expected: a list of at least 3 name suggestions and a JSDoc block for `calculate
 3. Enter optional context once, then confirm each suggested name with the Refactor Preview.
 
 Escape at any Quick Pick aborts the remaining symbols; already-applied renames stay.
+
+## Manual verification — Generate Description (Phase 5)
+
+### TypeScript (JSDoc)
+
+1. Press `F5`, open `test/fixtures/sample.ts`, and select the word `calculateTotal`.
+2. Right-click → **Lazy Naming: Generate Description**.
+3. Optionally enter up to 200 characters of context and press Enter.
+4. A **Refactor Preview** shows a JSDoc block inserted immediately above `calculateTotal` (line 9), with `@param` and `@returns` entries.
+5. Click **Apply** and verify the comment is present with correct indentation (column 0 for a top-level function).
+
+### Python (docstring)
+
+1. Open `test/fixtures/sample.py` and select `compute_discount`.
+2. Right-click → **Lazy Naming: Generate Description** and confirm the preview.
+3. Verify a triple-quoted docstring block is inserted directly above `def compute_discount` (line 1), at column 0.
+
+### Java (Javadoc)
+
+1. Open `test/fixtures/sample.java` and select `calculateTotal` (a class method, 2-space indented).
+2. Right-click → **Lazy Naming: Generate Description** and confirm the preview.
+3. Verify Javadoc lines are inserted above the method and match the method's 2-space indentation.
+
+### Existing docstring is replaced, not duplicated
+
+1. Open `test/fixtures/sample.ts`, add a JSDoc comment above `calculateTotal`, and save.
+2. Select `calculateTotal` and run **Generate Description**.
+3. The preview replaces the old comment with the new one — no duplicate block appears.
+
+### Whole file (Explorer)
+
+1. Right-click `test/fixtures/sample.ts` → **Lazy Naming: Generate Description**.
+2. Check the symbols to describe and press Enter, then confirm every docstring in a **single** Refactor Preview (all selected docstrings are applied together).
+
+Escape at any step aborts the remaining symbols; already-inserted docstrings stay.
 
 ## Project Docs
 
