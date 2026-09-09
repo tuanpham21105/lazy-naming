@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
-import { flattenSymbols, type SymbolCategory, type SymbolNode } from './symbolTree';
+import {
+  categoryOfSymbolKind,
+  flattenSymbols,
+  type SymbolCategory,
+  type SymbolNode,
+} from './symbolTree';
 
 export type FileSymbol = SymbolNode<vscode.Range>;
 
@@ -14,14 +19,20 @@ export async function getDocumentSymbols(
     return [];
   }
 
-  const toNode = (symbol: vscode.DocumentSymbol): FileSymbol => ({
-    name: symbol.name,
-    kind: categoryOfKind(symbol.kind),
-    range: symbol.selectionRange,
-    children: (symbol.children ?? []).map(toNode),
-  });
+  const toNode = (symbol: vscode.DocumentSymbol): FileSymbol | null => {
+    const kind = categoryOfSymbolKind(symbol.kind);
+    if (kind === null) {
+      return null;
+    }
+    const children = (symbol.children ?? [])
+      .map(toNode)
+      .filter((child): child is FileSymbol => child !== null);
+    return { name: symbol.name, kind, range: symbol.selectionRange, children };
+  };
 
-  return flattenSymbols(symbols.map(toNode));
+  return flattenSymbols(
+    symbols.map(toNode).filter((node): node is FileSymbol => node !== null),
+  );
 }
 
 export async function resolveSelectionKind(
@@ -42,25 +53,4 @@ export async function resolveSelectionKind(
     }
   }
   return best?.kind ?? 'variable';
-}
-
-function categoryOfKind(kind: vscode.SymbolKind): SymbolCategory {
-  switch (kind) {
-    case vscode.SymbolKind.Function:
-    case vscode.SymbolKind.Method:
-    case vscode.SymbolKind.Constructor:
-      return 'method';
-    case vscode.SymbolKind.Class:
-    case vscode.SymbolKind.Interface:
-    case vscode.SymbolKind.Struct:
-    case vscode.SymbolKind.Enum:
-    case vscode.SymbolKind.Module:
-    case vscode.SymbolKind.Namespace:
-    case vscode.SymbolKind.Object:
-    case vscode.SymbolKind.TypeParameter:
-    case vscode.SymbolKind.Array:
-      return 'class';
-    default:
-      return 'variable';
-  }
 }

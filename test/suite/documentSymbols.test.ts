@@ -87,6 +87,15 @@ suite('documentSymbols', () => {
     assert.strictEqual(byName['TAX_RATE'], 'variable');
   });
 
+  test('matches the numeric SymbolKind values used by the pure mapping', () => {
+    assert.strictEqual(vscode.SymbolKind.Package, 3);
+    assert.strictEqual(vscode.SymbolKind.File, 0);
+    assert.strictEqual(vscode.SymbolKind.Class, 4);
+    assert.strictEqual(vscode.SymbolKind.Method, 5);
+    assert.strictEqual(vscode.SymbolKind.Function, 11);
+    assert.strictEqual(vscode.SymbolKind.Variable, 12);
+  });
+
   test('resolves the kind of a symbol from a selection inside it', async () => {
     const symbols = await documentSymbols.getDocumentSymbols(sampleTs);
     const calculateTotal = symbols.find((symbol) => symbol.name === 'calculateTotal');

@@ -250,6 +250,10 @@ Complete steps 1–5 above, then press Escape instead of selecting a suggestion.
 
 Add a `.vscode/lazy-naming.json` file with `"namingStyle": "snake_case"`. Repeat the happy path test. Verify that all suggestions follow `snake_case` conventions.
 
+**Suggest Rename — multi-symbol order**
+
+When renaming a class together with its methods or variables in one file (e.g. a Java file), verify that methods and variables are renamed first and the class last. Renaming the class of its file changes the file name, so it must be the final step or later renames lose track of the file. Package and file declarations never appear in the symbol list.
+
 **Generate Description — TypeScript (JSDoc)**
 
 1. Open a TypeScript file containing a function with parameters and a return value.

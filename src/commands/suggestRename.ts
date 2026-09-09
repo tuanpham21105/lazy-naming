@@ -4,6 +4,7 @@ import { getDocumentContext } from '../core/contextReader';
 import { resolveSelectionKind } from '../core/documentSymbols';
 import { requestNameSuggestions } from '../core/lmClient';
 import { applyRename } from '../core/renameApplier';
+import { orderSymbolsForRename } from '../core/symbolTree';
 import {
   pickFileTargets,
   requestOptionalHint,
@@ -36,6 +37,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
     return;
   }
 
+  const ordered = orderSymbolsForRename(targets);
   const hint = await requestOptionalHint('What do these symbols do? Press Enter to skip');
   if (hint === undefined) {
     return;
@@ -48,7 +50,7 @@ export async function suggestRename(uri?: vscode.Uri): Promise<void> {
     },
     async (progress) => {
       let index = 1;
-      for (const target of targets) {
+      for (const target of ordered) {
         progress.report({
           message: `(${index}/${targets.length}) Suggesting a name for "${target.name}"…`,
         });

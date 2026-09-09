@@ -122,6 +122,8 @@ Expected: a list of at least 3 name suggestions and a JSDoc block for `calculate
 
 Escape at any Quick Pick aborts the remaining symbols; already-applied renames stay.
 
+Rename order note: method and variable renames run first, class renames last — renaming a Java class renames the file itself, so classes are applied after everything else so the loop never loses track of the file. Package and file declarations are never listed as rename/description targets.
+
 ## Manual verification — Generate Description (Phase 5)
 
 ### TypeScript (JSDoc)
