@@ -83,6 +83,10 @@ To act on multiple symbols at once, right-click a **file in the Explorer** and c
 
 Escape at any step (context input, Quick Pick, or preview) leaves all files unchanged.
 
+Demo:
+
+![Lazy Naming demo](assets/lazy_naming_demo_video.gif)
+
 ## Configuration
 
 Optionally put a `.vscode/lazy-naming.json` file in your workspace root to tune the AI:
