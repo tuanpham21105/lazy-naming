@@ -19,7 +19,7 @@
 
 ## Installation
 
-This extension is **not on the VSCode Marketplace** — the author is too lazy to go through every step of the Microsoft publisher-account setup. Download the latest build from the repo's [Releases page](https://github.com/thuantvmindxcom/mindx-challenge-tuanpham21105-20260908/releases) or the [builds](builds/) folder (e.g. `lazy-naming-1.0.0.vsix`) and install it:
+This extension is **not on the VSCode Marketplace** — the author is too lazy to go through every step of the Microsoft publisher-account setup. Download the latest build from the repo's [Releases page](https://github.com/tuanpham21105/lazy-naming/releases) or the [builds](builds/) folder (e.g. `lazy-naming-1.0.0.vsix`) and install it:
 
 ```bash
 code --install-extension lazy-naming-1.0.0.vsix
