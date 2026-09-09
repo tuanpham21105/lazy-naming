@@ -5,6 +5,11 @@
   "version": "0.0.1",
   "publisher": "tuanpham21105",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thuantvmindxcom/mindx-challenge-tuanpham21105-20260908.git"
+  },
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -31,10 +36,6 @@
       {
         "command": "lazyNaming.generateDescription",
         "title": "Lazy Naming: Generate Description"
-      },
-      {
-        "command": "lazyNaming.debugLm",
-        "title": "Lazy Naming: Debug LM (dev only)"
       }
     ],
     "menus": {
@@ -48,11 +49,6 @@
           "command": "lazyNaming.generateDescription",
           "when": "editorHasSelection",
           "group": "1_modification"
-        },
-        {
-          "command": "lazyNaming.debugLm",
-          "when": "editorHasSelection",
-          "group": "2_lazyNaming_dev"
         }
       ],
       "explorer/context": [

@@ -1,4 +1,3 @@
-
 # 3-Day Fresher Engineering Automation Challenge
 
 ## Objective
@@ -43,121 +42,46 @@ Learn to take initiative, solve practical problems, and build useful workflow to
 
 ---
 
-# Lazy Naming — Extension Development
+# Lazy Naming — VSCode Extension
 
-This repository also contains `lazy-naming`, a VSCode extension that uses AI to suggest meaningful names and generate descriptive docstrings for functions, variables, and classes.
+**Lazy Naming** is a VSCode extension that uses GitHub Copilot to suggest meaningful names for your symbols and generate descriptive docstrings in JSDoc, Python docstring, or Javadoc format.
 
-## Prerequisites
+![Lazy Naming](assets/icon.png)
 
-- Node.js 20+
-- npm
-- VSCode
-- [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) extension (required at runtime, not for development)
+## Features
 
-## Setup
+- **Suggest Rename** — Copilot proposes 3–6 candidate names (enforced to your configured naming style) and shows a Refactor Preview before anything touches disk.
+- **Generate Description** — Copilot writes a docstring for a symbol, with `@param` / `@return` entries where applicable, inserted with the correct indentation above the declaration.
+- **Two scopes** — act on a **selected symbol** (right-click in the editor) or on a **whole file** (Explorer context menu / Command Palette), picking multiple symbols at once.
+- **Existing docstrings are replaced**, never duplicated.
 
-```bash
-npm install
-```
+## Requirements
 
-## Run in the Extension Development Host
+- VSCode 1.95 or newer.
+- The [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) extension, installed and signed in.
+- For whole-file symbol detection in languages without a built-in service (Python, Java, Go, …), install the matching language extension (e.g. `ms-python.python`) — see the configuration note below.
 
-1. Open this repository in VSCode.
-2. Press `F5` (or run the **Run Extension** launch configuration).
-3. In the new window, both commands work at two scopes:
-   - **Selected symbol** — select a function/variable/class, right-click, and both commands appear (the commands are shown when text is selected).
-   - **Whole file** — right-click a file in the Explorer and choose either command, or run them from the Command Palette with no selection (they act on the active document).
+## Installation
 
-Both commands are fully implemented for both scopes.
-
-## Tests
-
-Unit tests (no VSCode host needed, pure logic only):
+Once published, install from the VSCode Marketplace, or install a release `.vsix` directly:
 
 ```bash
-npm test
+code --install-extension lazy-naming-0.0.1.vsix
 ```
 
-Integration tests (launch a real VSCode instance via `@vscode/test-electron`):
+Contributors: press `F5` in this repo to run the Extension Development Host. See the [Developer Guide](docs/developer-guide.md) for setup and testing.
 
-```bash
-npm run test:integration
-```
+## Usage
 
-## Manual verification — AI integration (Phase 3)
+1. Open a file and **select a symbol** (a function, method, variable, or class).
+2. Right-click and choose **Lazy Naming: Suggest Rename** or **Lazy Naming: Generate Description**.
+3. Optionally type up to 200 characters of context and press Enter (press Enter to skip).
+4. For **Suggest Rename**, pick one of the suggested candidate names.
+5. Review the **Refactor Preview** and click **Apply** — nothing changes before you confirm.
 
-The debug command exercises `lmClient` against live Copilot before the real UI is wired up.
+To act on multiple symbols at once, right-click a **file in the Explorer** and choose either command, or run them from the Command Palette with no selection. Check the symbols to process and press Enter.
 
-1. Make sure GitHub Copilot is installed and you are signed in.
-2. Press `F5` to open the Extension Development Host. **If the window was open before the latest changes, close it fully and press F5 again** so the extension manifest is reloaded.
-3. Open `test/fixtures/sample.ts` and select the word `calculateTotal`.
-4. Run **Lazy Naming: Debug LM (dev only)** — either right-click the selection and pick it from the context menu, or run it from the Command Palette.
-5. Optionally enter up to 200 characters of context and press Enter.
-6. Open the **Lazy Naming** output channel (View → Output).
-
-Expected: a list of at least 3 name suggestions and a JSDoc block for `calculateTotal`. If Copilot is missing, an error dialog explains that GitHub Copilot is required. This command is dev-only and will be removed before release.
-
-## Manual verification — Suggest Rename (Phase 4)
-
-### TypeScript (selected symbol)
-
-1. Press `F5`, open `test/fixtures/sample.ts`, and select the word `calculateTotal` (double-click it).
-2. Right-click → **Lazy Naming: Suggest Rename**.
-3. Optionally enter up to 200 characters of context and press Enter (or press Enter to skip).
-4. A Quick Pick shows 3–6 candidate names. Pick one.
-5. A **Refactor Preview** opens (side-by-side) listing the planned renames — `calculateTotal` is defined at line 9 and referenced at lines 15, 19, 30, 42.
-6. Click **Apply** in the preview. Verify the symbol was renamed everywhere.
-
-### Python (selected symbol)
-
-1. Open `test/fixtures/sample.py` and select `compute_discount`.
-2. Right-click → **Lazy Naming: Suggest Rename**, choose a candidate, apply the preview.
-3. Verify `compute_discount_for` and `apply_discount` now call the new name (definitions at lines 1, 6, 10).
-
-### Whole file (Explorer)
-
-1. Right-click `test/fixtures/sample.ts` in the Explorer → **Lazy Naming: Suggest Rename**.
-2. A checkbox list shows the file's symbols. Pre-check the ones to rename and press Enter.
-3. Enter optional context once, then confirm each suggested name with the Refactor Preview.
-
-Escape at any Quick Pick aborts the remaining symbols; already-applied renames stay.
-
-Rename order note: method and variable renames run first, class renames last — renaming a Java class renames the file itself, so classes are applied after everything else so the loop never loses track of the file. Package and file declarations are never listed as rename/description targets.
-
-## Manual verification — Generate Description (Phase 5)
-
-### TypeScript (JSDoc)
-
-1. Press `F5`, open `test/fixtures/sample.ts`, and select the word `calculateTotal`.
-2. Right-click → **Lazy Naming: Generate Description**.
-3. Optionally enter up to 200 characters of context and press Enter.
-4. A **Refactor Preview** shows a JSDoc block inserted immediately above `calculateTotal` (line 9), with `@param` and `@returns` entries.
-5. Click **Apply** and verify the comment is present with correct indentation (column 0 for a top-level function).
-
-### Python (docstring)
-
-1. Open `test/fixtures/sample.py` and select `compute_discount`.
-2. Right-click → **Lazy Naming: Generate Description** and confirm the preview.
-3. Verify a triple-quoted docstring block is inserted directly above `def compute_discount` (line 1), at column 0.
-
-### Java (Javadoc)
-
-1. Open `test/fixtures/sample.java` and select `calculateTotal` (a class method, 2-space indented).
-2. Right-click → **Lazy Naming: Generate Description** and confirm the preview.
-3. Verify Javadoc lines are inserted above the method and match the method's 2-space indentation.
-
-### Existing docstring is replaced, not duplicated
-
-1. Open `test/fixtures/sample.ts`, add a JSDoc comment above `calculateTotal`, and save.
-2. Select `calculateTotal` and run **Generate Description**.
-3. The preview replaces the old comment with the new one — no duplicate block appears.
-
-### Whole file (Explorer)
-
-1. Right-click `test/fixtures/sample.ts` → **Lazy Naming: Generate Description**.
-2. Check the symbols to describe and press Enter, then confirm every docstring in a **single** Refactor Preview (all selected docstrings are applied together).
-
-Escape at any step aborts the remaining symbols; already-inserted docstrings stay.
+Escape at any step (context input, Quick Pick, or preview) leaves all files unchanged.
 
 ## Configuration
 
@@ -186,10 +110,22 @@ Optionally put a `.vscode/lazy-naming.json` file in your workspace root to tune 
 | `prefixRules` | `{}` | Role-based prefix rules for generated names. Keys are roles (`boolean`, `handler`, …); the AI infers the symbol's role from context and picks the matching prefix. |
 | `customRules` | `""` | Free-text project conventions included in both prompts. |
 
-**Language support note:** whole-file symbol detection and symbol-level rename need a language service. Built-in coverage exists for TypeScript/JavaScript, CSS, HTML, JSON, and Markdown. For other languages (Python, Java, Go, …) install the matching extension (e.g. `ms-python.python`) — Lazy Naming will warn you when one is missing.
+**Language support note:** whole-file symbol detection and symbol-level rename need a language service. Built-in coverage exists for TypeScript/JavaScript, CSS, HTML, JSON, and Markdown. For other languages (Python, Java, Go, …) install the matching extension (e.g. `ms-python.python`). Lazy Naming warns you when one is missing.
+
+## Commands
+
+| Command | When it shows | Action |
+| --- | --- | --- |
+| `lazyNaming.suggestRename` | Text selected, or any non-folder file in Explorer | Suggest and apply a new name through Refactor Preview |
+| `lazyNaming.generateDescription` | Text selected, or any non-folder file in Explorer | Generate and insert a docstring through Refactor Preview |
 
 ## Project Docs
 
 - `docs/project_description.md` — product overview
 - `docs/project_structure.md` — architecture and responsibilities
 - `docs/development_plan.md` — phased development plan and testing guide
+- `docs/developer-guide.md` — contributor setup, automated tests, manual verification, and release process
+
+## Credits
+
+<a href="https://www.flaticon.com/free-icons/sloth" title="sloth icons">Sloth icons created by Magnific - Flaticon</a> — used for the extension icon image above.

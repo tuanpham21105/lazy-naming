@@ -2,9 +2,11 @@
 .vscode-test/**
 src/**
 test/**
+out/test/**
 out/**/*.map
 docs/**
 node_modules/**
 .gitignore
+tsconfig.json
+.mocharc.json
 **/*.ts
-!out/**
