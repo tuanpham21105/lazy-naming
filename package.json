@@ -2,7 +2,7 @@
   "name": "lazy-naming",
   "displayName": "Lazy Naming",
   "description": "AI-assisted naming and documentation for your code",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "tuanpham21105",
   "license": "MIT",
   "icon": "assets/icon.png",

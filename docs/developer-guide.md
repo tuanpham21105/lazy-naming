@@ -26,7 +26,7 @@ Both commands work at two scopes:
 - **Selected symbol** — select a function/variable/class, right-click, and both commands appear (the commands are shown when text is selected).
 - **Whole file** — right-click a file in the Explorer and choose either command, or run them from the Command Palette with no selection (they act on the active document) and pick symbols from the checkbox list.
 
-Debugging: the pre-release `lazyNaming.debugLm` command was removed for the 0.0.1 release. Use the real commands now; LM errors surface in notification dialogs.
+Debugging: the pre-release `lazyNaming.debugLm` command was removed before the 1.0.0 release. Use the real commands now; LM errors surface in notification dialogs.
 
 ## Automated tests
 
@@ -118,8 +118,8 @@ Before each release, verify:
 
 ```bash
 npx @vscode/vsce ls          # inspect the package contents
-npx @vscode/vsce package     # builds via vscode:prepublish and produces .vsix
-code --install-extension lazy-naming-0.0.1.vsix   # local validation in normal VSCode
+npx @vscode/vsce package --out builds/lazy-naming-1.0.0.vsix   # produces the .vsix under builds/
+code --install-extension builds/lazy-naming-1.0.0.vsix   # local validation in normal VSCode
 npx @vscode/vsce login tuanpham21105   # once, with your Azure DevOps PAT
 npx @vscode/vsce publish     # submit to the Marketplace
 ```

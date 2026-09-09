@@ -3,5 +3,7 @@ out/
 out-test/
 .vscode-test/
 *.vsix
+!builds/
+!builds/*.vsix
 *.log
 .codegraphy/*

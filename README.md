@@ -63,14 +63,10 @@ Learn to take initiative, solve practical problems, and build useful workflow to
 
 ## Installation
 
-This extension is **not on the VSCode Marketplace** — the author is too lazy to go through every step of the Microsoft publisher-account setup. Install it manually from this GitHub repo:
+This extension is **not on the VSCode Marketplace** — the author is too lazy to go through every step of the Microsoft publisher-account setup. Download the latest build from the [builds](builds/) folder (e.g. `lazy-naming-1.0.0.vsix`) and install it:
 
 ```bash
-git clone https://github.com/thuantvmindxcom/mindx-challenge-tuanpham21105-20260908.git
-cd mindx-challenge-tuanpham21105-20260908
-npm install
-npx @vscode/vsce package          # builds lazy-naming-0.0.1.vsix
-code --install-extension lazy-naming-0.0.1.vsix
+code --install-extension lazy-naming-1.0.0.vsix
 ```
 
 Contributors: press `F5` in this repo to run the Extension Development Host instead. See the [Developer Guide](docs/developer-guide.md) for setup, testing, and the (hopefully someday completed) Marketplace publishing steps.
