@@ -68,7 +68,7 @@ npm install
    - **Selected symbol** — select a function/variable/class, right-click, and both commands appear (the commands are shown when text is selected).
    - **Whole file** — right-click a file in the Explorer and choose either command, or run them from the Command Palette with no selection (they act on the active document).
 
-Currently both commands show a placeholder message describing the resolved target. Full implementation is planned for later phases.
+- **Suggest Rename** is fully implemented for both scopes. **Generate Description** still shows a placeholder message and is planned for the next phase.
 
 ## Tests
 
@@ -96,6 +96,31 @@ The debug command exercises `lmClient` against live Copilot before the real UI i
 6. Open the **Lazy Naming** output channel (View → Output).
 
 Expected: a list of at least 3 name suggestions and a JSDoc block for `calculateTotal`. If Copilot is missing, an error dialog explains that GitHub Copilot is required. This command is dev-only and will be removed before release.
+
+## Manual verification — Suggest Rename (Phase 4)
+
+### TypeScript (selected symbol)
+
+1. Press `F5`, open `test/fixtures/sample.ts`, and select the word `calculateTotal` (double-click it).
+2. Right-click → **Lazy Naming: Suggest Rename**.
+3. Optionally enter up to 200 characters of context and press Enter (or press Enter to skip).
+4. A Quick Pick shows 3–6 candidate names. Pick one.
+5. A **Refactor Preview** opens (side-by-side) listing the planned renames — `calculateTotal` is defined at line 9 and referenced at lines 15, 19, 30, 42.
+6. Click **Apply** in the preview. Verify the symbol was renamed everywhere.
+
+### Python (selected symbol)
+
+1. Open `test/fixtures/sample.py` and select `compute_discount`.
+2. Right-click → **Lazy Naming: Suggest Rename**, choose a candidate, apply the preview.
+3. Verify `compute_discount_for` and `apply_discount` now call the new name (definitions at lines 1, 6, 10).
+
+### Whole file (Explorer)
+
+1. Right-click `test/fixtures/sample.ts` in the Explorer → **Lazy Naming: Suggest Rename**.
+2. A checkbox list shows the file's symbols. Pre-check the ones to rename and press Enter.
+3. Enter optional context once, then confirm each suggested name with the Refactor Preview.
+
+Escape at any Quick Pick aborts the remaining symbols; already-applied renames stay.
 
 ## Project Docs
 

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { suggestRename } from './commands/suggestRename';
 import { loadConfig } from './config/configLoader';
 import { getDocumentContext } from './core/contextReader';
 import { LmRequestError, requestDocstring, requestNameSuggestions } from './core/lmClient';
@@ -85,11 +86,9 @@ async function runDebugLm(): Promise<void> {
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand('lazyNaming.suggestRename', (uri?: vscode.Uri) => {
-      vscode.window.showInformationMessage(
-        `Lazy Naming: "Suggest Rename" received for ${describeTarget(uri)} (not implemented yet).`,
-      );
-    }),
+    vscode.commands.registerCommand('lazyNaming.suggestRename', (uri?: vscode.Uri) =>
+      void suggestRename(uri),
+    ),
   );
 
   context.subscriptions.push(

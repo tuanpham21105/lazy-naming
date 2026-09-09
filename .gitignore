@@ -4,3 +4,4 @@ out-test/
 .vscode-test/
 *.vsix
 *.log
+.codegraphy/*

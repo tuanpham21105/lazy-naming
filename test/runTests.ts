@@ -8,7 +8,7 @@ async function main(): Promise<void> {
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
-      launchArgs: ['--disable-extensions'],
+      launchArgs: ['--disable-extensions', extensionDevelopmentPath],
     });
   } catch (err) {
     console.error('Failed to run integration tests: ', err);
